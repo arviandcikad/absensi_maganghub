@@ -3,62 +3,198 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Absensi GPS Otomatis</title>
+  <title>Absensi MagangHub</title>
+
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    button { padding: 12px 20px; font-size: 16px; cursor: pointer; }
-    #status { margin-top: 20px; font-size: 18px; }
+    body {
+      font-family: "Poppins", Arial, sans-serif;
+      background: #eef2ff;
+      margin: 0; padding: 0;
+      display: flex; justify-content: center;
+      align-items: center; min-height: 100vh;
+    }
+
+    .card {
+      background: white;
+      width: 92%; max-width: 450px;
+      padding: 30px;
+      border-radius: 22px;
+      box-shadow: 0 6px 25px rgba(0,0,0,0.12);
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      text-align: center;
+      color: #1640FF;
+      margin-top: 0;
+      font-weight: 700;
+    }
+
+    label { font-weight: 600; margin-top: 10px; display: block; }
+
+    input {
+      width: 100%; padding: 14px;
+      border-radius: 12px;
+      border: 2px solid #ccd4ff;
+      font-size: 15px; margin-top: 6px;
+      outline: none; transition: 0.25s;
+    }
+    input:focus {
+      border-color: #1640ff;
+      box-shadow: 0 0 6px rgba(22,64,255,0.2);
+    }
+
+    button {
+      width: 100%; padding: 15px;
+      margin-top: 18px;
+      background: #1640FF;
+      color: white; font-size: 18px;
+      border: none; border-radius: 12px;
+      cursor: pointer;
+      transition: 0.25s;
+      font-weight: 600;
+    }
+    button:hover { background: #0f2ed4; }
+    button:active { transform: scale(0.97); }
+
+    #status {
+      text-align: center;
+      margin-top: 20px;
+      font-weight: 600; font-size: 17px;
+      min-height: 22px;
+    }
+
+    .info-box {
+      background: #f8f9ff;
+      padding: 12px;
+      margin-top: 12px;
+      border-radius: 10px;
+      border-left: 4px solid #1640ff;
+      font-size: 14px;
+    }
   </style>
 </head>
+
 <body>
-  <h2>Absensi Magang Hub Hikari</h2>
-  <p>Masukkan nama Anda lalu klik tombol di bawah untuk absen.</p>
 
-  <input type="text" id="nama" placeholder="Nama Anda" style="padding:10px; width:80%; font-size:16px;">
-  <br><br>
+<div class="card">
+  <h2>Absensi MagangHub Hikari</h2>
 
-  <button onclick="absen()">ABSEN SEKARANG</button>
+  <!-- REALTIME CLOCK -->
+  <div class="info-box">
+    ⏰ <b>Waktu Saat Ini:</b> <span id="clock">Memuat...</span>
+  </div>
+
+  <!-- REALTIME GPS -->
+  <div class="info-box">
+    📍 <b>Lokasi:</b><br>
+    <span id="gps">Menunggu izin GPS...</span>
+  </div>
+
+  <!-- INPUT URL APPS SCRIPT -->
+  <label>https://script.google.com/macros/s/AKfycbzM5KKVudCblqZmPBR5SdwZEduAFF9usSi99u_yGrpzcnHImu2xZmG8WSBQ3T8A9pP9/exec:</label>
+  <input type="text" id="webapp" placeholder="Tempel URL WebApp Anda">
+
+  <button onclick="simpanURL()">Simpan URL</button>
+
+  <!-- INPUT NAME -->
+  <label>Nama Anda:</label>
+  <input type="text" id="nama" placeholder="Nama lengkap Anda">
+
+  <button onclick="absen()">📌 ABSEN SEKARANG</button>
 
   <div id="status"></div>
+</div>
 
-  <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbzM5KKVudCblqZmPBR5SdwZEduAFF9usSi99u_yGrpzcnHImu2xZmG8WSBQ3T8A9pP9/exec"; // Ganti dengan URL Apps Script Anda
+<script>
+  // ⏰ REALTIME CLOCK
+  setInterval(() => {
+    const now = new Date();
+    document.getElementById("clock").innerText =
+      now.toLocaleTimeString("id-ID", { hour12: false });
+  }, 1000);
 
-    function absen() {
-      const nama = document.getElementById('nama').value.trim();
-      if (!nama) {
-        document.getElementById('status').innerText = "Mohon masukkan nama terlebih dahulu.";
-        return;
+  // 📍 REALTIME GPS
+  let currentLat = null;
+  let currentLng = null;
+
+  if (navigator.geolocation) {
+    navigator.geolocation.watchPosition(
+      pos => {
+        currentLat = pos.coords.latitude;
+        currentLng = pos.coords.longitude;
+
+        document.getElementById("gps").innerText =
+          `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}`;
+      },
+      err => {
+        document.getElementById("gps").innerText =
+          "❌ Izinkan akses lokasi pada browser Anda.";
       }
+    );
+  } else {
+    document.getElementById("gps").innerText = "❌ Browser tidak mendukung GPS.";
+  }
 
-      if (!navigator.geolocation) {
-        document.getElementById('status').innerText = "Browser tidak mendukung GPS.";
-        return;
-      }
+  // 🔧 SIMPAN URL WEBAPP
+  function simpanURL() {
+    const url = document.getElementById("webapp").value.trim();
+    if (!url) return alert("URL belum diisi!");
 
-      document.getElementById('status').innerText = "Mengambil lokasi...";
+    localStorage.setItem("webapp_url", url);
+    alert("URL berhasil disimpan!");
+  }
 
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
+  // LOAD otomatis saat halaman dibuka
+  const savedURL = localStorage.getItem("webapp_url");
+  if (savedURL) document.getElementById("webapp").value = savedURL;
 
-          const url = `${scriptURL}?nama=${encodeURIComponent(nama)}&lat=${lat}&lng=${lng}`;
+  // 📝 ABSENSI (KIRIM NAMA + GPS)
+  function absen() {
+    const nama = document.getElementById("nama").value.trim();
+    const scriptURL = localStorage.getItem("webapp_url");
+    const status = document.getElementById("status");
 
-          fetch(url)
-            .then(res => res.text())
-            .then(msg => {
-              document.getElementById('status').innerText = msg;
-            })
-            .catch(err => {
-              document.getElementById('status').innerText = "Gagal mengirim data.";
-            });
-        },
-        error => {
-          document.getElementById('status').innerText = "GPS gagal diakses. Izinkan lokasi terlebih dahulu.";
-        }
-      );
+    if (!scriptURL) {
+      status.innerText = "❌ URL WebApp belum diisi!";
+      status.style.color = "red";
+      return;
     }
-  </script>
+
+    if (!nama) {
+      status.innerText = "❌ Nama belum diisi!";
+      status.style.color = "red";
+      return;
+    }
+
+    if (currentLat === null) {
+      status.innerText = "❌ GPS belum aktif, izinkan lokasi!";
+      status.style.color = "red";
+      return;
+    }
+
+    status.innerText = "Mengirim data...";
+    status.style.color = "#333";
+
+    const sendURL = `${scriptURL}?nama=${encodeURIComponent(nama)}&lat=${currentLat}&lng=${currentLng}`;
+
+    fetch(sendURL)
+      .then(res => res.text())
+      .then(msg => {
+        status.innerText = msg;
+        status.style.color = "#1640FF";
+      })
+      .catch(err => {
+        status.innerText = "❌ Gagal mengirim data!";
+        status.style.color = "red";
+      });
+  }
+</script>
+
 </body>
 </html>
