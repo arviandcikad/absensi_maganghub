@@ -8,22 +8,18 @@
   <style>
     body {
       font-family: "Poppins", Arial, sans-serif;
-      background: #f0f4ff;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+      background: #eef2ff;
+      margin: 0; padding: 0;
+      display: flex; justify-content: center;
+      align-items: center; min-height: 100vh;
     }
 
     .card {
       background: white;
-      width: 92%;
-      max-width: 420px;
+      width: 92%; max-width: 450px;
       padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      border-radius: 22px;
+      box-shadow: 0 6px 25px rgba(0,0,0,0.12);
       animation: fadeIn 0.5s ease;
     }
 
@@ -34,126 +30,146 @@
 
     h2 {
       text-align: center;
-      margin-top: 0;
       color: #1640FF;
+      margin-top: 0;
       font-weight: 700;
     }
 
-    p {
-      text-align: center;
-      color: #444;
-      font-size: 15px;
-    }
+    label { font-weight: 600; margin-top: 10px; display: block; }
 
     input {
-      width: 100%;
-      padding: 14px;
+      width: 100%; padding: 14px;
       border-radius: 12px;
-      border: 2px solid #d8ddff;
-      font-size: 16px;
-      margin-top: 10px;
-      outline: none;
-      transition: 0.2s;
+      border: 2px solid #ccd4ff;
+      font-size: 15px; margin-top: 6px;
+      outline: none; transition: 0.25s;
     }
-
     input:focus {
-      border-color: #1640FF;
-      box-shadow: 0 0 6px rgba(22,64,255,0.25);
+      border-color: #1640ff;
+      box-shadow: 0 0 6px rgba(22,64,255,0.2);
     }
 
     button {
-      width: 100%;
-      padding: 15px;
+      width: 100%; padding: 15px;
       margin-top: 18px;
       background: #1640FF;
-      color: white;
-      font-size: 18px;
-      border: none;
-      border-radius: 12px;
+      color: white; font-size: 18px;
+      border: none; border-radius: 12px;
       cursor: pointer;
       transition: 0.25s;
       font-weight: 600;
     }
-
-    button:hover {
-      background: #0e2dcc;
-    }
-
-    button:active {
-      transform: scale(0.97);
-    }
+    button:hover { background: #0f2ed4; }
+    button:active { transform: scale(0.97); }
 
     #status {
       text-align: center;
       margin-top: 20px;
-      font-size: 17px;
-      font-weight: 600;
-      color: #333;
-      min-height: 24px;
+      font-weight: 600; font-size: 17px;
+      min-height: 22px;
+    }
+
+    .info-box {
+      background: #f8f9ff;
+      padding: 12px;
+      margin-top: 12px;
+      border-radius: 10px;
+      border-left: 4px solid #1640ff;
+      font-size: 14px;
     }
   </style>
 </head>
 
 <body>
 
-  <div class="card">
-    <h2>Absensi MagangHub Hikari</h2>
-    <p>Masukkan nama Anda lalu klik tombol di bawah untuk check-in atau check-out.</p>
+<div class="card">
+  <h2>Absensi MagangHub Hikari</h2>
 
-    <input type="text" id="nama" placeholder="Nama lengkap Anda">
-
-    <button onclick="absen()">📍 ABSEN SEKARANG</button>
-
-    <div id="status"></div>
+  <!-- REALTIME CLOCK -->
+  <div class="info-box">
+     <b>Waktu Saat Ini:</b> <span id="clock">Memuat...</span>
   </div>
 
-  <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbzM5KKVudCblqZmPBR5SdwZEduAFF9usSi99u_yGrpzcnHImu2xZmG8WSBQ3T8A9pP9/exec";
+  <!-- REALTIME GPS -->
+  <div class="info-box">
+     <b>Lokasi:</b><br>
+    <span id="gps">Menunggu izin GPS...</span>
+  </div>
 
-    function absen() {
-      const nama = document.getElementById('nama').value.trim();
-      const statusBox = document.getElementById('status');
+  <!-- INPUT NAME -->
+  <label>Nama Anda:</label>
+  <input type="text" id="nama" placeholder="Nama lengkap Anda">
 
-      if (!nama) {
-        statusBox.innerText = "⚠️ Nama masih kosong!";
-        statusBox.style.color = "red";
-        return;
+  <button onclick="absen()">📌 ABSEN SEKARANG</button>
+
+  <div id="status"></div>
+</div>
+
+<script>
+  // URL WebApp Google Apps Script (FIXED)
+  const scriptURL = "https://script.google.com/macros/s/AKfycbwY2OfQtFlgaIx3XT-8d5t0Hg4NoNkEcFz0ac7niM7xNBdqlBhFHSoWsDWr1UayBv4A/exec";
+
+  // REALTIME CLOCK
+  setInterval(() => {
+    const now = new Date();
+    document.getElementById("clock").innerText =
+      now.toLocaleTimeString("id-ID", { hour12: false });
+  }, 1000);
+
+  // REALTIME GPS
+  let currentLat = null;
+  let currentLng = null;
+
+  if (navigator.geolocation) {
+    navigator.geolocation.watchPosition(
+      pos => {
+        currentLat = pos.coords.latitude;
+        currentLng = pos.coords.longitude;
+
+        document.getElementById("gps").innerText =
+          `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}`;
+      },
+      err => {
+        document.getElementById("gps").innerText =
+          "Izinkan akses lokasi pada browser Anda.";
       }
+    );
+  }
 
-      statusBox.innerText = "Mengambil lokasi...";
-      statusBox.style.color = "#333";
+  // 📝 ABSENSI
+  function absen() {
+    const nama = document.getElementById("nama").value.trim();
+    const status = document.getElementById("status");
 
-      if (!navigator.geolocation) {
-        statusBox.innerText = "Browser tidak mendukung GPS.";
-        statusBox.style.color = "red";
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-
-          const url = `${scriptURL}?nama=${encodeURIComponent(nama)}&lat=${lat}&lng=${lng}`;
-
-          fetch(url)
-            .then(res => res.text())
-            .then(msg => {
-              statusBox.innerText = msg;
-              statusBox.style.color = "#1640FF";
-            })
-            .catch(err => {
-              statusBox.innerText = "❌ Gagal mengirim data!";
-              statusBox.style.color = "red";
-            });
-        },
-        error => {
-          statusBox.innerText = "❌ Izinkan akses GPS pada browser!";
-          statusBox.style.color = "red";
-        }
-      );
+    if (!nama) {
+      status.innerText = " Nama belum diisi!";
+      status.style.color = "red";
+      return;
     }
-  </script>
+
+    if (currentLat === null) {
+      status.innerText = "❌ GPS belum aktif!";
+      status.style.color = "red";
+      return;
+    }
+
+    status.innerText = "Mengirim data...";
+    status.style.color = "#333";
+
+    const sendURL = `${scriptURL}?nama=${encodeURIComponent(nama)}&lat=${currentLat}&lng=${currentLng}`;
+
+    fetch(sendURL)
+      .then(res => res.text())
+      .then(msg => {
+        status.innerText = msg;
+        status.style.color = "#1640FF";
+      })
+      .catch(err => {
+        status.innerText = " Gagal mengirim data!";
+        status.style.color = "red";
+      });
+  }
+</script>
 
 </body>
 </html>
